@@ -13,4 +13,4 @@ asyncpg==0.29.0
 pytz==2024.1
 
 # опционально, если планируешь APScheduler JobStore в БД:
-psycopg[binary]==3.2.1
+# psycopg[binary]==3.2.1
