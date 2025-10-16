@@ -1,17 +1,40 @@
+from ..keyboards import main_kb
+from ..database.db import add_task, get_user_timezone, list_active  # ← list_active нужно
+from ..config import settings
+import html
 from datetime import datetime
-
 from aiogram import Router, F
 from aiogram.types import Message
 
-from ..services.parser import parse_task
-from ..database.db import add_task, get_user_timezone 
-from ..services.scheduler import schedule_task
-
-import html
+BUTTON_ADD = "➕ Добавить задачу"
+BUTTON_LIST = "📅 Мои задачи"
+BUTTON_SETTINGS = "⚙️ Настройки"
 
 router = Router()
 
-@router.message(F.text)
+@router.message(F.text == BUTTON_LIST)
+async def on_list(msg: Message):
+    tasks = await list_active(msg.chat.id)
+    if not tasks:
+        return await msg.answer("Пока нет активных задач ✨")
+    lines = []
+    for t in tasks:
+        when = t.due_at.strftime('%Y-%m-%d %H:%M') if t.due_at else "без срока"
+        lines.append(f"<b>#{t.id}</b> — {html.escape(t.title)} · {when} · {t.priority}")
+    await msg.answer("\n".join(lines))
+
+@router.message(F.text == BUTTON_SETTINGS)
+async def on_settings(msg: Message):
+    await msg.answer("Настройки:\n/set_timezone Europe/Moscow — установить часовой пояс")
+
+@router.message(F.text == BUTTON_ADD)
+async def on_add_hint(msg: Message):
+    await msg.answer("Пришли текст или голосовое: «Напомни завтра в 12 купить кофе»")
+
+IGNORE = {BUTTON_ADD, BUTTON_LIST, BUTTON_SETTINGS}
+
+
+@router.message(F.text and ~F.text.in_(IGNORE))
 async def handle_text(msg: Message):
     text = msg.text.strip()
     user_tz = await get_user_timezone(msg.chat.id)  # ← берём TZ пользователя (или None)
