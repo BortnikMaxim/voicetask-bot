@@ -48,6 +48,8 @@ class Task(Base):
 
     is_done: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
 
 # ---------------- Engine / Session ----------------
 engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
