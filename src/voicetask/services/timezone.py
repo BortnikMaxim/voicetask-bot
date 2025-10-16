@@ -22,12 +22,12 @@ def to_utc_naive(date_str: str, time_str: str | None, user_tz: str | None) -> da
     return dt_utc.replace(tzinfo=None)
 
 def format_for_user(utc_naive_dt: datetime | None, user_tz: str | None) -> str:
-    """
-    Переводит UTC-naive время в часовую зону пользователя и форматирует для вывода.
-    """
     if utc_naive_dt is None:
         return "без даты"
+
     tz_name = user_tz or getattr(settings, "TZ", None) or "UTC"
+    import pytz
     tz = pytz.timezone(tz_name)
+
     local_dt = pytz.UTC.localize(utc_naive_dt).astimezone(tz)
     return local_dt.strftime("%Y-%m-%d %H:%M")

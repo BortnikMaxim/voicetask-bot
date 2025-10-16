@@ -18,6 +18,6 @@ class Settings(BaseSettings):
     WHISPER_LANGUAGE: str | None = Field(default=None)  # e.g. "ru"
 
     TASK_DEFAULT_TIME: str = Field(default="09:00")     # HH:MM
-    TZ: str = Field(default="Europe/Berlin")            # поддерживаем TZ/tz из .env
+    TZ: str = Field(default="Europe/Moscow")            # поддерживаем TZ/tz из .env
 
 settings = Settings()
