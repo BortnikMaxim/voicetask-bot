@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.types import Message
 
 from ..services.parser import parse_task
-from ..database.db import add_task
+from ..database.db import add_task, get_user_timezone 
 from ..services.scheduler import schedule_task
 
 router = Router()
