@@ -7,6 +7,8 @@ from ..services.parser import parse_task
 from ..database.db import add_task, get_user_timezone 
 from ..services.scheduler import schedule_task
 
+import html
+
 router = Router()
 
 @router.message(F.text)
