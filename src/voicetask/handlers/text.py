@@ -22,13 +22,13 @@ async def on_list(msg: Message):
     user_tz = await get_user_timezone(msg.chat.id)
     tasks = await list_active(msg.chat.id)
     if not tasks:
-        return await msg.answer("Пока нет активных задач ✨", reply_markup=main_kb())
+        return await msg.answer("Пока нет активных задач ✨", reply_markup=main_kb)
 
     lines = []
     for t in tasks:
         when = format_for_user(t.due_at, user_tz) if t.due_at else "без срока"
         lines.append(f"<b>#{t.id}</b> — {html.escape(t.title)} · {when} · {t.priority}")
-    await msg.answer("\n".join(lines), parse_mode="HTML", reply_markup=main_kb())
+    await msg.answer("\n".join(lines), parse_mode="HTML", reply_markup=main_kb)
 
 
 @router.message(F.text == BUTTON_SETTINGS)
@@ -36,7 +36,7 @@ async def on_settings(msg: Message):
     await msg.answer(
         "Настройки:\n"
         "/set_timezone Europe/Moscow — установить часовой пояс",
-        reply_markup=main_kb()
+        reply_markup=main_kb
     )
 
 
@@ -44,7 +44,7 @@ async def on_settings(msg: Message):
 async def on_add_hint(msg: Message):
     await msg.answer(
         "Пришли текст или голосовое: «Напомни завтра в 12 купить кофе»",
-        reply_markup=main_kb()
+        reply_markup=main_kb
     )
 
 
@@ -75,5 +75,5 @@ async def handle_text(msg: Message):
         f"✅ Добавил задачу: <b>{html.escape(title)}</b>{due_text}\n"
         f"Приоритет: {priority}",
         parse_mode="HTML",
-        reply_markup=main_kb(),
+        reply_markup=main_kb,
     )

@@ -53,5 +53,5 @@ async def handle_voice(msg: Message):
         f"✅ Добавил задачу: <b>{html_escape(title)}</b>{due_text}\n"
         f"Приоритет: {priority}",
         parse_mode="HTML",
-        reply_markup=main_kb(),
+        reply_markup=main_kb,
     )
