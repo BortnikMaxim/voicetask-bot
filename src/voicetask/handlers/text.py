@@ -5,6 +5,7 @@ import html
 from datetime import datetime
 from aiogram import Router, F
 from aiogram.types import Message
+from ..services.parser import parse_task
 
 BUTTON_ADD = "➕ Добавить задачу"
 BUTTON_LIST = "📅 Мои задачи"
