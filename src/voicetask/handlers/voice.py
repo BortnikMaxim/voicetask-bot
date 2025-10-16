@@ -1,7 +1,8 @@
+# src/voicetask/handlers/voice.py
 import os
 import tempfile
 from datetime import datetime
-import pytz  # ✅ добавим поддержку часовых поясов
+from html import escape as html_escape
 
 from aiogram import Router, F
 from aiogram.types import Message
@@ -9,16 +10,13 @@ from aiogram.types import Message
 from ..services.whisper import transcribe_ogg_file
 from ..services.parser import parse_task
 from ..database.db import add_task, get_user_timezone
-from ..services.scheduler import schedule_task
 from ..bot import bot
-from ..config import settings
 
 router = Router()
 
-
 @router.message(F.voice)
 async def handle_voice(msg: Message):
-    # 📥 Скачиваем аудио
+    # скачиваем файл
     file = await bot.get_file(msg.voice.file_id)
     tmp = tempfile.NamedTemporaryFile(suffix=".ogg", delete=False)
     tmp_path = tmp.name
@@ -33,40 +31,31 @@ async def handle_voice(msg: Message):
         except FileNotFoundError:
             pass
 
-    # 🕒 Получаем часовой пояс пользователя
+    # парсинг с учётом TZ пользователя
     user_tz = await get_user_timezone(msg.chat.id)
-    parsed = await parse_task(text, user_tz=user_tz)  # ✅ передаём tz в парсер
+    parsed = await parse_task(text, user_tz=user_tz)
 
     title = parsed.get("title", text[:120])
     priority = parsed.get("priority", "normal")
     due_date = parsed.get("due_date")
     due_time = parsed.get("due_time")
-    due_at = None
 
-    # 🧠 Формируем due_at с учётом timezone
+    due_at = None
     if due_date:
         if due_time:
-            naive_dt = datetime.fromisoformat(f"{due_date}T{due_time}:00")
+            due_at = datetime.fromisoformat(f"{due_date}T{due_time}:00")
         else:
+            from ..config import settings
             h, m = map(int, settings.TASK_DEFAULT_TIME.split(":"))
-            naive_dt = datetime.fromisoformat(f"{due_date}T{h:02d}:{m:02d}:00")
+            due_at = datetime.fromisoformat(f"{due_date}T{h:02d}:{m:02d}:00")
 
-        # если пользователь задал timezone — локализуем
-        if user_tz:
-            try:
-                tz = pytz.timezone(user_tz)
-                due_at = tz.localize(naive_dt).astimezone(pytz.UTC)  # сохраняем в UTC
-            except Exception:
-                due_at = naive_dt
-        else:
-            due_at = naive_dt
-
-    # 💾 Сохраняем задачу
+    # сохраняем в БД — уведомления пришлёт наш фоновый цикл notification_loop
     task = await add_task(chat_id=msg.chat.id, title=title, priority=priority, due_at=due_at)
-    await schedule_task(task, notify_fn=None)
 
     due_text = f" на {due_at.strftime('%Y-%m-%d %H:%M')}" if due_at else ""
     await msg.answer(
-        f"📝 Распознал: <i>{text}</i>\n"
-        f"✅ Добавил задачу: <b>{title}</b>{due_text}\nПриоритет: {priority}"
+        f"📝 Распознал: <i>{html_escape(text)}</i>\n"
+        f"✅ Добавил задачу: <b>{html_escape(title)}</b>{due_text}\n"
+        f"Приоритет: {priority}",
+        parse_mode="HTML",
     )
